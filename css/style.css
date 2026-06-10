@@ -255,17 +255,20 @@ button { font-family: var(--font-ui); }
   text-shadow: 0 1px 6px rgba(0,0,0,.8);
 }
 .hud-sub {
-  margin-top: 3px;
-  font-size: 10px;
+  margin-top: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
   letter-spacing: .08em;
-  color: var(--paper-dim);
+  color: #e6e9f2;
+  text-shadow: 0 1px 5px rgba(0,0,0,.95);
 }
-.hud-dot { margin: 0 4px; opacity: .5; }
+.hud-sub #hud-day { color: var(--gold-bright, #e8c27a); }
+.hud-dot { margin: 0 5px; opacity: .45; }
 
 .hud-right { display: flex; align-items: center; gap: 10px; }
 .hud-stats { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 .stat { display: flex; align-items: center; gap: 5px; }
-.stat-label { font-size: 9px; letter-spacing: .1em; color: var(--paper-dim); }
+.stat-label { font-size: 9px; letter-spacing: .1em; color: #c9cedd; text-shadow: 0 1px 4px rgba(0,0,0,.9); }
 .stat-num {
   font-size: 10px; font-weight: 600; width: 20px; text-align: right;
   color: var(--paper); font-variant-numeric: tabular-nums;

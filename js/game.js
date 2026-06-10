@@ -227,6 +227,7 @@
   /** ログを1つさかのぼる */
   function goBack() {
     if (state.over || !state.history.length) return;
+    if (Date.now() < state.busyUntil) return; // 章タイトルカード表示中は無効
     Sound.ensure();
     hideTermPopover();
     if (typing) { finishTyping(); }
@@ -356,13 +357,15 @@
     void el.chapterCard.offsetWidth;
     el.chapterCard.style.animation = '';
     Sound.chapter();
-    state.busyUntil = Date.now() + 1500;
     clearTimeout(showChapterCard._t);
     showChapterCard._t = setTimeout(() => el.chapterCard.classList.add('hidden'), 2150);
   }
 
+  let sceneStartTimer = null;
+
   function loadScene(id, { burn = true } = {}) {
     if (id === 'ENDING') { ending(); return; }
+    clearTimeout(sceneStartTimer);
     id = resolveSceneId(id);
     const scene = STORY.scenes[id];
     state.sceneId = id;
@@ -378,15 +381,28 @@
     setSceneFx(scene.sceneFx);
     el.choices.classList.add('hidden');
     el.choices.innerHTML = '';
+
+    const begin = () => {
+      if (burn) {
+        applyBurn();
+        if (checkGameOver()) return;
+      }
+      showLine(state.lines[0]);
+    };
+
     if (scene.chapter !== state.lastChapter) {
+      // 新しい章:タイトルカードを見せ切ってから本文を開始する
       state.lastChapter = scene.chapter;
       showChapterCard(scene);
+      state.busyUntil = Date.now() + 2050; // カード表示中はクリック無効
+      el.speaker.textContent = '';
+      el.text.textContent = '';
+      el.chatLine.classList.add('hidden');
+      el.nextHint.classList.add('hidden');
+      sceneStartTimer = setTimeout(begin, 1750); // カードのフェードアウトに合わせて開始
+    } else {
+      begin();
     }
-    if (burn) {
-      applyBurn();
-      if (checkGameOver()) return;
-    }
-    showLine(state.lines[0]);
   }
 
   function currentScene() { return STORY.scenes[state.sceneId]; }
@@ -679,6 +695,7 @@
 
   function startGame() {
     Sound.ensure();
+    clearTimeout(sceneStartTimer);
     state = newState();
     el.titleScreen.classList.add('hidden');
     el.endingScreen.classList.add('hidden');
