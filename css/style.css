@@ -701,6 +701,108 @@ button { font-family: var(--font-ui); }
   color: var(--paper-dim);
 }
 
+/* ============ シェア / ノート解放 ============ */
+.share-box {
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--ink-2);
+  padding: 22px 18px 18px;
+  margin-bottom: 26px;
+}
+.share-lede {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  letter-spacing: .12em;
+  color: var(--paper);
+  margin-bottom: 14px;
+}
+.btn-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  color: #fff;
+  background: #000;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px;
+  padding: 12px 34px;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .2s, border-color .2s;
+}
+.btn-share:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,.5);
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+}
+.btn-share .x-logo { font-size: 16px; font-weight: 400; }
+.btn-share.shared {
+  background: rgba(140,186,147,.12);
+  border-color: rgba(140,186,147,.5);
+  color: #9ecfa6;
+  cursor: default;
+}
+.share-hint {
+  margin-top: 12px;
+  font-size: 10.5px;
+  letter-spacing: .08em;
+  line-height: 1.8;
+  color: var(--paper-dim);
+}
+.share-hint::before { content: '🔒 '; }
+.share-hint.unlocked { color: #9ecfa6; }
+.share-hint.unlocked::before { content: '🔓 '; }
+
+/* シェアまでノートはぼかしてロック */
+.notes-locked .note {
+  filter: blur(6px);
+  opacity: .5;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ============ スタクラ案内 ============ */
+.promo {
+  text-align: center;
+  border: 1px solid var(--gold-dim);
+  border-radius: 8px;
+  background:
+    radial-gradient(420px 130px at 50% 0%, rgba(211,165,88,.09), transparent),
+    var(--ink-2);
+  padding: 28px 20px 26px;
+  margin-top: 30px;
+}
+.promo-kicker {
+  font-size: 9px;
+  letter-spacing: .5em;
+  text-indent: .5em;
+  color: var(--gold-soft);
+  margin-bottom: 12px;
+}
+.promo-title {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  color: var(--paper);
+  margin-bottom: 10px;
+}
+.promo-text {
+  font-size: 11.5px;
+  line-height: 2;
+  letter-spacing: .04em;
+  color: var(--paper-dim);
+  margin-bottom: 18px;
+}
+.btn-promo {
+  display: inline-block;
+  text-decoration: none;
+  animation: none;
+  padding: 12px 44px;
+}
+
 /* ============ レスポンシブ ============ */
 @media (max-width: 720px) {
   .hud-stats { gap: 7px; }

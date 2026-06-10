@@ -33,6 +33,10 @@
     chapterCard: $('chapter-card'),
     ccDay: $('cc-day'),
     ccTitle: $('cc-title'),
+    btnShare: $('btn-share'),
+    btnShareLabel: $('btn-share-label'),
+    shareHint: $('share-hint'),
+    promoLink: $('promo-link'),
   };
 
   const STAT_KEYS = ['cash', 'biz', 'morale', 'culture', 'skill'];
@@ -498,7 +502,7 @@
       ${items}`;
   }
 
-  function showEndingScreen(art, title, text, extraLesson, label = 'EPILOGUE') {
+  function showEndingScreen(art, title, text, extraLesson, label = 'EPILOGUE', meta = {}) {
     state.over = true;
     el.gameScreen.classList.add('hidden');
     el.endingScreen.classList.remove('hidden');
@@ -508,8 +512,62 @@
     el.endingText.textContent = text;
     el.endingSummary.innerHTML = summaryHtml();
     el.endingNotes.innerHTML = notesHtml(extraLesson);
-    el.endingScreen.scrollTop = 0;
+    setupShare(title, meta);
+    window.scrollTo(0, 0);
     Sound.ending();
+  }
+
+  // ---------- 結果シェアとノート解放 ----------
+
+  const SITE_URL = 'https://startupclass.co.jp/';
+
+  function setupShare(title, meta) {
+    // ノートをロックし、シェアUIを初期状態に戻す
+    el.endingNotes.classList.add('notes-locked');
+    el.btnShare.classList.remove('shared');
+    el.btnShareLabel.textContent = '結果をシェアする';
+    el.shareHint.classList.remove('unlocked');
+    el.shareHint.textContent = 'シェアすると「経営の振り返りノート」── 全選択への詳細フィードバックが解放されます';
+
+    // スタクラ案内リンク(UTM付き)
+    const cta = new URLSearchParams({
+      utm_source: 'startup_story',
+      utm_medium: 'game',
+      utm_campaign: 'ending_cta',
+      utm_content: meta.key || 'unknown',
+    });
+    el.promoLink.href = `${SITE_URL}?${cta}`;
+
+    // シェア本文(シェア先リンクにもUTM)
+    const share = new URLSearchParams({
+      utm_source: 'x',
+      utm_medium: 'social',
+      utm_campaign: 'startup_story_share',
+      utm_content: meta.key || 'unknown',
+    });
+    const lines = [
+      '【STARTUP STORY】社員5人のスタートアップに入社して、私の結末は──',
+      `『${title}』`,
+      `最終役職:${STORY.roles[state.roleIdx].name} / 社員数:${state.members}人` +
+        (meta.score != null ? ` / 総合スコア:${meta.score}` : ''),
+      '#スタートアップで働く物語',
+      `${SITE_URL}?${share}`,
+    ];
+    state.shareUrl = 'https://x.com/intent/post?text=' + encodeURIComponent(lines.join('\n'));
+  }
+
+  function onShare() {
+    window.open(state.shareUrl, '_blank', 'noopener');
+    // 実際に投稿されたかは検証しない(押した時点で解放)
+    if (el.endingNotes.classList.contains('notes-locked')) {
+      el.endingNotes.classList.remove('notes-locked');
+      el.btnShare.classList.add('shared');
+      el.btnShareLabel.textContent = 'シェアありがとうございます';
+      el.shareHint.classList.add('unlocked');
+      el.shareHint.textContent = '振り返りノートを解放しました。あなたの全選択へのフィードバックをどうぞ';
+      Sound.good();
+      setTimeout(() => el.endingNotes.scrollIntoView({ behavior: 'smooth', block: 'start' }), 350);
+    }
   }
 
   function ending() {
@@ -519,12 +577,12 @@
     const order = ['ipo', 'acq', 'steady', 'restart'];
     const key = order.find(k => STORY.endings[k].cond(ctx)) || 'restart';
     const e = STORY.endings[key];
-    showEndingScreen(e.art, e.title, `${e.text}\n\n総合スコア:${score}`);
+    showEndingScreen(e.art, e.title, `${e.text}\n\n総合スコア:${score}`, null, 'EPILOGUE', { key, score });
   }
 
   function gameOver(kind) {
     const g = STORY.gameovers[kind];
-    showEndingScreen(g.art, g.title, g.text, g.lesson, 'GAME OVER');
+    showEndingScreen(g.art, g.title, g.text, g.lesson, 'GAME OVER', { key: 'gameover_' + kind });
   }
 
   // ---------- 起動 ----------
@@ -544,6 +602,7 @@
   $('btn-start').addEventListener('click', startGame);
   $('btn-replay').addEventListener('click', startGame);
   el.btnMute.addEventListener('click', e => { e.stopPropagation(); Sound.ensure(); Sound.toggle(); });
+  el.btnShare.addEventListener('click', onShare);
   el.stage.addEventListener('click', advance);
   document.addEventListener('keydown', e => {
     if (el.gameScreen.classList.contains('hidden')) {
