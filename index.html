@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STARTUP STORY ─ スタートアップで働く物語</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- タイトル画面 -->
+  <div id="title-screen" class="screen">
+    <div id="title-art" class="art-frame"></div>
+    <div class="title-overlay">
+      <h1 class="game-title">STARTUP STORY</h1>
+      <p class="game-subtitle">― スタートアップで働く物語 ―</p>
+      <p class="game-desc">
+        社員5人のスタートアップに入社したあなた。<br>
+        KPI設計、MVV策定、評価制度、資金調達、そして組織崩壊……。<br>
+        数々のハードシングスを乗り越え、自分と会社を成長させよう。
+      </p>
+      <button id="btn-start" class="btn-primary">入社する</button>
+    </div>
+  </div>
+
+  <!-- ゲーム画面 -->
+  <div id="game-screen" class="screen hidden">
+    <header id="hud">
+      <div class="hud-left">
+        <div class="hud-chapter" id="hud-chapter">第1章</div>
+        <div class="hud-title" id="hud-role">役職：メンバー</div>
+        <div class="hud-members" id="hud-members">社員数：5人</div>
+      </div>
+      <div class="hud-stats">
+        <div class="stat" data-stat="cash">
+          <span class="stat-label">資金</span>
+          <div class="bar"><div class="bar-fill fill-cash" id="bar-cash"></div></div>
+          <span class="stat-num" id="num-cash">50</span>
+        </div>
+        <div class="stat" data-stat="biz">
+          <span class="stat-label">事業</span>
+          <div class="bar"><div class="bar-fill fill-biz" id="bar-biz"></div></div>
+          <span class="stat-num" id="num-biz">30</span>
+        </div>
+        <div class="stat" data-stat="morale">
+          <span class="stat-label">士気</span>
+          <div class="bar"><div class="bar-fill fill-morale" id="bar-morale"></div></div>
+          <span class="stat-num" id="num-morale">60</span>
+        </div>
+        <div class="stat" data-stat="culture">
+          <span class="stat-label">文化</span>
+          <div class="bar"><div class="bar-fill fill-culture" id="bar-culture"></div></div>
+          <span class="stat-num" id="num-culture">40</span>
+        </div>
+        <div class="stat" data-stat="skill">
+          <span class="stat-label">成長</span>
+          <div class="bar"><div class="bar-fill fill-skill" id="bar-skill"></div></div>
+          <span class="stat-num" id="num-skill">10</span>
+        </div>
+      </div>
+    </header>
+
+    <main id="stage">
+      <div id="art" class="art-frame"></div>
+      <div id="fx-layer"></div>
+      <div id="toast" class="hidden"></div>
+    </main>
+
+    <footer id="textbox">
+      <div id="speaker" class="speaker"></div>
+      <div id="text" class="text"></div>
+      <div id="next-hint" class="next-hint hidden">▼ クリックで次へ</div>
+      <div id="choices" class="choices hidden"></div>
+    </footer>
+  </div>
+
+  <!-- エンディング画面 -->
+  <div id="ending-screen" class="screen hidden">
+    <div id="ending-art" class="art-frame"></div>
+    <div class="ending-overlay">
+      <p class="ending-label">― ENDING ―</p>
+      <h2 id="ending-title" class="ending-title"></h2>
+      <p id="ending-text" class="ending-text"></p>
+      <div id="ending-summary" class="ending-summary"></div>
+      <button id="btn-replay" class="btn-primary">もう一度プレイする</button>
+    </div>
+  </div>
+
+</div>
+<script src="js/art.js"></script>
+<script src="js/scenarios.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
