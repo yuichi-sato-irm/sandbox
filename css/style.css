@@ -136,11 +136,12 @@ button { font-family: var(--font-ui); }
   45% { transform: translateX(-4px); } 60% { transform: translateX(3px); }
   80% { transform: translateX(-1px); }
 }
-.fx-storm .veil-stage::after {
+.fx-storm #art::after {
   content: '';
   position: absolute; inset: 0;
   background: #cfe2ff;
   opacity: 0;
+  pointer-events: none;
   animation: lightning 7s infinite;
 }
 @keyframes lightning {
@@ -436,6 +437,38 @@ button { font-family: var(--font-ui); }
   animation: hintBounce 1.3s ease-in-out infinite;
 }
 @keyframes hintBounce { 0%,100% { transform: translateY(0); opacity: .9; } 50% { transform: translateY(3px); opacity: .4; } }
+
+/* メッセージログをさかのぼる */
+.btn-back {
+  position: absolute;
+  right: 2px; top: -6px;
+  width: 28px; height: 28px;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--paper-dim);
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 2;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.btn-back:hover { color: var(--gold); border-color: var(--gold-soft); background: rgba(211,165,88,.08); }
+
+.review-badge {
+  position: absolute;
+  right: 38px; top: 0;
+  font-size: 9px;
+  letter-spacing: .14em;
+  color: var(--gold);
+  background: rgba(211,165,88,.1);
+  border: 1px solid var(--gold-dim);
+  border-radius: 999px;
+  padding: 4px 12px;
+  z-index: 2;
+  animation: chatIn .25s ease-out;
+}
+#textbox.reviewing { background: linear-gradient(180deg, transparent 0%, rgba(13,11,6,.6) 26%, rgba(13,11,6,.94) 62%); }
 
 /* Slack風チャット */
 .chat-line {
@@ -813,4 +846,83 @@ button { font-family: var(--font-ui); }
   .choices { bottom: 128px; }
   .choice-btn { font-size: 12px; padding: 10px 14px; }
   .ending-summary { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ---- スマホ縦持ち:オーバーレイをやめて縦積みレイアウトに ---- */
+@media (max-width: 640px) {
+  #app { padding: 0; justify-content: flex-start; }
+
+  .theater {
+    aspect-ratio: auto;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  .art-fill {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    aspect-ratio: 16 / 9.5;
+    flex: none;
+  }
+  .veil { display: none; }
+
+  /* タイトル:絵の下にテキストを積む */
+  .title-content {
+    position: static;
+    padding: 26px 18px 34px;
+  }
+  .game-tagline { margin: 20px 0 24px; }
+  .title-foot { margin-top: 20px; }
+
+  /* ゲーム画面:HUD → イラスト → 選択肢 → テキスト */
+  #game-screen .theater { min-height: 100svh; }
+  #hud {
+    position: static;
+    order: 0;
+    background: #070a11;
+    border-bottom: 1px solid var(--line);
+    padding: 10px 12px;
+    align-items: center;
+  }
+  .hud-left { min-width: 0; flex: 1; }
+  .hud-chapter { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hud-sub { font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hud-right { flex-shrink: 0; }
+  .hud-stats { max-width: 170px; justify-content: flex-end; }
+  #art { order: 1; }
+  #choices {
+    position: static;
+    order: 2;
+    transform: none;
+    width: auto;
+    left: auto; bottom: auto;
+    padding: 12px 12px 2px;
+  }
+  #textbox {
+    position: static;
+    order: 3;
+    flex: 1;
+    border-top: 1px solid var(--line);
+    background: var(--ink-2);
+    padding: 16px 0 0;
+    min-height: 190px;
+  }
+  #textbox.reviewing { background: #14110a; }
+  .tb-inner { max-width: 100%; padding: 0 14px 22px; min-height: 0; }
+  .btn-back { top: -4px; }
+  .text { min-height: 0; }
+  #chapter-card { position: fixed; inset: 0; }
+  #toast { position: fixed; top: 64px; }
+
+  /* エンディング:絵の下に結果テキストを積む */
+  .ending-content { position: static; padding: 28px 16px 30px; }
+  .ending-summary, .share-box, .ending-notes, .promo, .ending-actions {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+  .note { padding: 13px 6px 13px 18px; margin-left: 4px; }
+  #ending-screen { padding-bottom: 28px; }
 }

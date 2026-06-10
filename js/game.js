@@ -37,6 +37,8 @@
     btnShareLabel: $('btn-share-label'),
     shareHint: $('share-hint'),
     promoLink: $('promo-link'),
+    btnBack: $('btn-back'),
+    reviewBadge: $('review-badge'),
   };
 
   const STAT_KEYS = ['cash', 'biz', 'morale', 'culture', 'skill'];
@@ -113,6 +115,8 @@
       nextId: null,
       lastChapter: null,
       busyUntil: 0,
+      history: [],   // 表示済みメッセージのログ
+      reviewIdx: null, // ログ閲覧中の位置(null=最新を表示中)
       over: false,
     };
   }
@@ -201,7 +205,77 @@
 
   // ---------- テキスト表示 ----------
 
+  /** メッセージを1件、即時表示する(ログ閲覧・復帰用) */
+  function renderLineInstant(line) {
+    el.nextHint.classList.add('hidden');
+    if (typing) { clearInterval(typing.timer); typing = null; }
+    if (line.chat) {
+      el.speaker.textContent = '';
+      el.text.textContent = '';
+      el.chatLine.classList.remove('hidden');
+      el.chatLine.innerHTML = `
+        <span class="chat-ch">${escapeHtml(line.chat.ch)}</span>
+        <span class="chat-user">${escapeHtml(line.chat.user)}</span>
+        <span class="chat-text">${termify(line.chat.text)}</span>`;
+    } else {
+      el.chatLine.classList.add('hidden');
+      el.speaker.textContent = line.sp || '';
+      el.text.innerHTML = termify(line.t);
+    }
+  }
+
+  /** ログを1つさかのぼる */
+  function goBack() {
+    if (state.over || !state.history.length) return;
+    Sound.ensure();
+    hideTermPopover();
+    if (typing) { finishTyping(); }
+    let idx;
+    if (state.reviewIdx === null) {
+      // 閲覧モードに入る。選択肢表示中は「直前のメッセージ」から
+      idx = state.phase === 'choices' ? state.history.length - 1 : state.history.length - 2;
+      if (idx < 0) return;
+      el.choices.classList.add('hidden'); // 中身は保持したまま隠す
+      el.textbox.classList.add('reviewing');
+      el.reviewBadge.classList.remove('hidden');
+    } else {
+      idx = Math.max(0, state.reviewIdx - 1);
+    }
+    state.reviewIdx = idx;
+    renderLineInstant(state.history[idx]);
+    Sound.tone(440, 0.05, { gain: 0.04 });
+  }
+
+  /** ログ閲覧中に1つ進む。最新まで来たら通常表示に復帰 */
+  function stepForward() {
+    const idx = state.reviewIdx + 1;
+    if (idx <= state.history.length - 1) {
+      state.reviewIdx = idx;
+      renderLineInstant(state.history[idx]);
+      Sound.tone(520, 0.05, { gain: 0.04 });
+      if (idx === state.history.length - 1 && state.phase !== 'choices') restoreLive();
+    } else {
+      restoreLive();
+    }
+  }
+
+  /** ログ閲覧を終え、最新の状態に戻す */
+  function restoreLive() {
+    state.reviewIdx = null;
+    el.textbox.classList.remove('reviewing');
+    el.reviewBadge.classList.add('hidden');
+    const last = state.history[state.history.length - 1];
+    if (last) renderLineInstant(last);
+    if (state.phase === 'choices') {
+      el.choices.classList.remove('hidden');
+    } else {
+      el.nextHint.classList.remove('hidden');
+    }
+  }
+
   function showLine(line) {
+    state.history.push(line);
+    if (state.history.length > 300) state.history.shift();
     el.nextHint.classList.add('hidden');
     if (typing) { clearInterval(typing.timer); typing = null; }
 
@@ -319,6 +393,7 @@
 
   function advance() {
     if (state.over) return;
+    if (state.reviewIdx !== null) { stepForward(); return; } // ログ閲覧中は閲覧を進める
     if (Date.now() < state.busyUntil) return; // 章タイトルカード表示中
     Sound.ensure();
     hideTermPopover();
@@ -441,18 +516,29 @@
     Sound.tone(740, 0.06, { gain: 0.04 });
   }
 
+  let termOpenFor = null;
+
   function hideTermPopover() {
     termPop.classList.add('hidden');
+    termOpenFor = null;
   }
 
-  // 用語クリックを最優先で拾う(物語の進行クリックより先に処理)
+  // 用語クリックを最優先で拾う(物語の進行クリックより先に処理)。
+  // ポップアップ表示中のクリックは「閉じる」操作として消費し、話を進めない。
   document.addEventListener('click', e => {
     const t = e.target.closest('.term');
+    const popOpen = !termPop.classList.contains('hidden');
     if (t) {
       e.stopPropagation();
       Sound.ensure();
-      showTermPopover(t);
-    } else if (!e.target.closest('#term-pop')) {
+      if (popOpen && termOpenFor === t) {
+        hideTermPopover();
+      } else {
+        showTermPopover(t);
+        termOpenFor = t;
+      }
+    } else if (popOpen) {
+      e.stopPropagation();
       hideTermPopover();
     }
   }, true);
@@ -520,6 +606,10 @@
   // ---------- 結果シェアとノート解放 ----------
 
   const SITE_URL = 'https://startupclass.co.jp/';
+  /** シェアに載せるこのゲーム自身のURL(Web配信時は現在地、ローカル実行時は配布元) */
+  const GAME_URL = /^https?:$/.test(location.protocol)
+    ? location.origin + location.pathname
+    : 'https://github.com/yuichi-sato-irm/sandbox';
 
   function setupShare(title, meta) {
     // ノートをロックし、シェアUIを初期状態に戻す
@@ -538,7 +628,7 @@
     });
     el.promoLink.href = `${SITE_URL}?${cta}`;
 
-    // シェア本文(シェア先リンクにもUTM)
+    // シェア本文(リンクはこのゲーム自身のURL+UTM)
     const share = new URLSearchParams({
       utm_source: 'x',
       utm_medium: 'social',
@@ -551,7 +641,7 @@
       `最終役職:${STORY.roles[state.roleIdx].name} / 社員数:${state.members}人` +
         (meta.score != null ? ` / 総合スコア:${meta.score}` : ''),
       '#スタートアップで働く物語',
-      `${SITE_URL}?${share}`,
+      `${GAME_URL}?${share}`,
     ];
     state.shareUrl = 'https://x.com/intent/post?text=' + encodeURIComponent(lines.join('\n'));
   }
@@ -603,15 +693,19 @@
   $('btn-replay').addEventListener('click', startGame);
   el.btnMute.addEventListener('click', e => { e.stopPropagation(); Sound.ensure(); Sound.toggle(); });
   el.btnShare.addEventListener('click', onShare);
+  el.btnBack.addEventListener('click', e => { e.stopPropagation(); goBack(); });
   el.stage.addEventListener('click', advance);
   document.addEventListener('keydown', e => {
     if (el.gameScreen.classList.contains('hidden')) {
       if (e.key === 'Enter' && !el.titleScreen.classList.contains('hidden')) startGame();
       return;
     }
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
       e.preventDefault();
       advance();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      goBack();
     } else if (/^[1-4]$/.test(e.key)) {
       chooseByIndex(Number(e.key) - 1);
     }
