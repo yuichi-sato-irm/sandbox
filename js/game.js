@@ -30,11 +30,15 @@
     endingSummary: $('ending-summary'),
     endingNotes: $('ending-notes'),
     btnMute: $('btn-mute'),
+    chapterCard: $('chapter-card'),
+    ccDay: $('cc-day'),
+    ccTitle: $('cc-title'),
   };
 
   const STAT_KEYS = ['cash', 'biz', 'morale', 'culture', 'skill'];
   const STAT_LABEL = { cash: '資金', biz: '事業', morale: '士気', culture: '文化', skill: '成長' };
-  const STAT_COLOR = { cash: '#f5c542', biz: '#4ea8f5', morale: '#f56b6b', culture: '#9b6bf5', skill: '#4ecd7b' };
+  const STAT_COLOR = { cash: '#d3a558', biz: '#7da7d4', morale: '#d48a85', culture: '#a995cf', skill: '#8cba93' };
+  const COLOR_DOWN = '#d48a85';
   const VERDICT = {
     good:  { mark: '◎', label: '定石',         cls: 'v-good' },
     trade: { mark: '○', label: 'トレードオフ', cls: 'v-trade' },
@@ -75,6 +79,7 @@
     bad()     { this.tone(220, 0.3, { type: 'sawtooth', gain: 0.05, slide: -80 }); },
     promote() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.22, { when: i * 0.11, gain: 0.07 })); },
     alarm()   { [0, 0.25].forEach(w => this.tone(880, 0.18, { type: 'square', gain: 0.03, when: w })); },
+    chapter() { this.tone(131, 0.9, { type: 'sine', gain: 0.05 }); this.tone(196, 0.9, { when: 0.05, gain: 0.04 }); },
     ending()  { [392, 494, 587, 784].forEach((f, i) => this.tone(f, 0.6, { when: i * 0.05, gain: 0.05 })); },
     toggle() {
       this.muted = !this.muted;
@@ -84,7 +89,7 @@
   };
 
   function updateMuteBtn() {
-    if (el.btnMute) el.btnMute.textContent = Sound.muted ? '🔇' : '🔊';
+    if (el.btnMute) el.btnMute.classList.toggle('muted', Sound.muted);
   }
 
   // ---------- 状態 ----------
@@ -102,6 +107,8 @@
       phase: 'lines', // 'lines' | 'choices' | 'result'
       resultLines: [],
       nextId: null,
+      lastChapter: null,
+      busyUntil: 0,
       over: false,
     };
   }
@@ -133,10 +140,10 @@
     div.className = 'fx-pop';
     div.textContent = text;
     div.style.color = color;
-    div.style.left = (8 + slot * 16) + '%';
-    div.style.bottom = '18%';
+    div.style.top = (62 + slot * 30) + 'px';
+    div.style.animationDelay = (slot * 0.09) + 's';
     el.fxLayer.appendChild(div);
-    setTimeout(() => div.remove(), 1700);
+    setTimeout(() => div.remove(), 2200 + slot * 90);
   }
 
   function showToast(msg) {
@@ -156,11 +163,11 @@
       if (!d) return;
       state.stats[k] = clamp(state.stats[k] + d);
       d > 0 ? plus++ : minus++;
-      popFx(`${STAT_LABEL[k]} ${d > 0 ? '+' : ''}${d}`, d > 0 ? STAT_COLOR[k] : '#ff9d9d', slot++);
+      popFx(`${STAT_LABEL[k]} ${d > 0 ? '+' : ''}${d}`, d > 0 ? STAT_COLOR[k] : COLOR_DOWN, slot++);
     });
     if (fx.members) {
       state.members = Math.max(1, state.members + fx.members);
-      popFx(`社員 ${fx.members > 0 ? '+' : ''}${fx.members}人`, fx.members > 0 ? '#9fe8e2' : '#ff9d9d', slot++);
+      popFx(`社員 ${fx.members > 0 ? '+' : ''}${fx.members}人`, fx.members > 0 ? '#7ec4b8' : COLOR_DOWN, slot++);
     }
     if (plus || minus) (plus >= minus ? Sound.good() : Sound.bad());
     const newRole = roleFor(state.stats.skill);
@@ -178,7 +185,7 @@
   function applyBurn() {
     const burn = 3 + Math.floor(state.members / 12);
     state.stats.cash = clamp(state.stats.cash - burn);
-    popFx(`月次バーン 資金 -${burn}`, '#ffce7a', 4);
+    popFx(`月次バーン 資金 -${burn}`, '#b9925a', 5);
     renderHud();
   }
 
@@ -202,7 +209,7 @@
       el.chatLine.innerHTML = `
         <span class="chat-ch">${escapeHtml(line.chat.ch)}</span>
         <span class="chat-user">${escapeHtml(line.chat.user)}</span>
-        <span class="chat-text">${escapeHtml(line.chat.text)}</span>`;
+        <span class="chat-text">${termify(line.chat.text)}</span>`;
       Sound.tone(880, 0.07, { gain: 0.05 }); Sound.tone(1175, 0.1, { when: 0.06, gain: 0.04 });
       el.nextHint.classList.remove('hidden');
       return;
@@ -220,6 +227,7 @@
       if (i >= full.length) {
         clearInterval(timer);
         typing = null;
+        el.text.innerHTML = termify(full); // 用語をタップ可能にする
         el.nextHint.classList.remove('hidden');
       }
     }, 22);
@@ -229,7 +237,7 @@
   function finishTyping() {
     if (!typing) return false;
     clearInterval(typing.timer);
-    el.text.textContent = typing.full;
+    el.text.innerHTML = termify(typing.full);
     typing = null;
     el.nextHint.classList.remove('hidden');
     return true;
@@ -261,6 +269,20 @@
     if (fx === 'alarm') Sound.alarm();
   }
 
+  function showChapterCard(scene) {
+    el.ccDay.textContent = scene.day ? `─ 入社${scene.day}日目 ─` : '';
+    el.ccTitle.textContent = scene.chapter;
+    el.chapterCard.classList.remove('hidden');
+    // アニメーション再発火
+    el.chapterCard.style.animation = 'none';
+    void el.chapterCard.offsetWidth;
+    el.chapterCard.style.animation = '';
+    Sound.chapter();
+    state.busyUntil = Date.now() + 1500;
+    clearTimeout(showChapterCard._t);
+    showChapterCard._t = setTimeout(() => el.chapterCard.classList.add('hidden'), 2150);
+  }
+
   function loadScene(id, { burn = true } = {}) {
     if (id === 'ENDING') { ending(); return; }
     id = resolveSceneId(id);
@@ -278,6 +300,10 @@
     setSceneFx(scene.sceneFx);
     el.choices.classList.add('hidden');
     el.choices.innerHTML = '';
+    if (scene.chapter !== state.lastChapter) {
+      state.lastChapter = scene.chapter;
+      showChapterCard(scene);
+    }
     if (burn) {
       applyBurn();
       if (checkGameOver()) return;
@@ -289,7 +315,9 @@
 
   function advance() {
     if (state.over) return;
+    if (Date.now() < state.busyUntil) return; // 章タイトルカード表示中
     Sound.ensure();
+    hideTermPopover();
     if (finishTyping()) return; // タイプ中なら全文表示だけ
 
     if (state.phase === 'lines') {
@@ -319,8 +347,8 @@
     choices.forEach((c, i) => {
       const btn = document.createElement('button');
       btn.className = 'choice-btn';
-      btn.style.animationDelay = (i * 0.1) + 's';
-      btn.innerHTML = escapeHtml(c.label);
+      btn.style.animationDelay = (i * 0.09) + 's';
+      btn.innerHTML = `<span class="c-num">${'一二三四'[i] || i + 1}</span><span>${escapeHtml(c.label)}</span>`;
       btn.addEventListener('click', e => {
         e.stopPropagation();
         choose(c);
@@ -328,6 +356,13 @@
       el.choices.appendChild(btn);
     });
     el.choices.classList.remove('hidden');
+  }
+
+  /** 数字キー(1〜4)で選択肢を選ぶ */
+  function chooseByIndex(i) {
+    if (state.phase !== 'choices') return;
+    const btns = el.choices.querySelectorAll('.choice-btn');
+    if (btns[i]) btns[i].click();
   }
 
   function choose(choice) {
@@ -361,18 +396,78 @@
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
   }
 
+  // ---------- 用語解説(グロッサリー) ----------
+
+  const termRegex = (() => {
+    const terms = Object.keys(STORY.glossary)
+      .sort((a, b) => b.length - a.length)
+      .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    return new RegExp(`(${terms.join('|')})`, 'g');
+  })();
+
+  /** 本文中の専門用語を、タップで解説が出る要素に変換する */
+  function termify(s) {
+    return escapeHtml(s).replace(termRegex, m => `<span class="term" data-term="${m}">${m}</span>`);
+  }
+
+  const termPop = document.createElement('div');
+  termPop.id = 'term-pop';
+  termPop.className = 'hidden';
+  document.body.appendChild(termPop);
+
+  function showTermPopover(termEl) {
+    const word = termEl.dataset.term;
+    const def = STORY.glossary[word];
+    if (!def) return;
+    termPop.innerHTML = `
+      <p class="tp-kicker">用語解説</p>
+      <p class="tp-word">${escapeHtml(word)}</p>
+      <p class="tp-def">${escapeHtml(def)}</p>`;
+    termPop.classList.remove('hidden');
+    const r = termEl.getBoundingClientRect();
+    const pw = Math.min(330, window.innerWidth - 24);
+    termPop.style.width = pw + 'px';
+    let left = r.left + r.width / 2 - pw / 2;
+    left = Math.max(12, Math.min(left, window.innerWidth - pw - 12));
+    termPop.style.left = left + 'px';
+    const ph = termPop.offsetHeight;
+    let top = r.top - ph - 10;
+    if (top < 8) top = r.bottom + 10;
+    termPop.style.top = top + 'px';
+    Sound.tone(740, 0.06, { gain: 0.04 });
+  }
+
+  function hideTermPopover() {
+    termPop.classList.add('hidden');
+  }
+
+  // 用語クリックを最優先で拾う(物語の進行クリックより先に処理)
+  document.addEventListener('click', e => {
+    const t = e.target.closest('.term');
+    if (t) {
+      e.stopPropagation();
+      Sound.ensure();
+      showTermPopover(t);
+    } else if (!e.target.closest('#term-pop')) {
+      hideTermPopover();
+    }
+  }, true);
+
   // ---------- エンディング ----------
 
   function summaryHtml() {
     const s = state.stats;
-    return `
-      <span>最終役職 <b>${STORY.roles[state.roleIdx].name}</b></span>
-      <span>社員数 <b>${state.members}人</b></span>
-      <span>資金 <b>${s.cash}</b></span>
-      <span>事業 <b>${s.biz}</b></span>
-      <span>士気 <b>${s.morale}</b></span>
-      <span>文化 <b>${s.culture}</b></span>
-      <span>成長 <b>${s.skill}</b></span>`;
+    const card = (label, value, unit) =>
+      `<div class="sum-card"><span class="sum-label">${label}</span><span class="sum-value">${value}${unit ? `<small>${unit}</small>` : ''}</span></div>`;
+    return [
+      card('最終役職', STORY.roles[state.roleIdx].name),
+      card('社員数', state.members, '人'),
+      card('資金', s.cash),
+      card('事業', s.biz),
+      card('士気', s.morale),
+      card('文化', s.culture),
+      card('成長', s.skill),
+    ].join('');
   }
 
   function notesHtml(extraLesson) {
@@ -384,26 +479,30 @@
             <span class="note-ch">${escapeHtml(entry.ch)}</span>
             <span class="note-verdict ${v.cls}">${v.mark} ${v.label}</span>
           </div>
-          <div class="note-choice">▶ ${escapeHtml(entry.label)}</div>
+          <div class="note-choice">${escapeHtml(entry.label)}</div>
           <div class="note-title">${escapeHtml(entry.review.title)}</div>
-          <div class="note-text">${escapeHtml(entry.review.text)}</div>
+          <div class="note-text">${termify(entry.review.text)}</div>
         </div>`;
     }).join('');
     if (extraLesson) {
       items += `
         <div class="note note-final">
-          <div class="note-head"><span class="note-verdict v-risk">✦ 最大の教訓</span></div>
-          <div class="note-text">${escapeHtml(extraLesson)}</div>
+          <div class="note-head"><span class="note-verdict v-risk">最大の教訓</span></div>
+          <div class="note-text">${termify(extraLesson)}</div>
         </div>`;
     }
     if (!items) return '';
-    return `<h3 class="notes-title">📓 経営の振り返りノート ─ あなたの選択と、その意味</h3>${items}`;
+    return `
+      <h3 class="notes-title">経営の振り返りノート</h3>
+      <p class="notes-lede">あなたが下した決断と、その裏にある経営のセオリー</p>
+      ${items}`;
   }
 
-  function showEndingScreen(art, title, text, extraLesson) {
+  function showEndingScreen(art, title, text, extraLesson, label = 'EPILOGUE') {
     state.over = true;
     el.gameScreen.classList.add('hidden');
     el.endingScreen.classList.remove('hidden');
+    document.querySelector('.ending-label').textContent = label;
     el.endingArt.innerHTML = Art.get(art);
     el.endingTitle.textContent = title;
     el.endingText.textContent = text;
@@ -425,7 +524,7 @@
 
   function gameOver(kind) {
     const g = STORY.gameovers[kind];
-    showEndingScreen(g.art, g.title, g.text, g.lesson);
+    showEndingScreen(g.art, g.title, g.text, g.lesson, 'GAME OVER');
   }
 
   // ---------- 起動 ----------
@@ -444,13 +543,18 @@
   updateMuteBtn();
   $('btn-start').addEventListener('click', startGame);
   $('btn-replay').addEventListener('click', startGame);
-  el.btnMute.addEventListener('click', e => { e.stopPropagation(); Sound.toggle(); });
-  el.textbox.addEventListener('click', advance);
-  el.art.addEventListener('click', advance);
+  el.btnMute.addEventListener('click', e => { e.stopPropagation(); Sound.ensure(); Sound.toggle(); });
+  el.stage.addEventListener('click', advance);
   document.addEventListener('keydown', e => {
-    if ((e.key === 'Enter' || e.key === ' ') && !el.gameScreen.classList.contains('hidden')) {
+    if (el.gameScreen.classList.contains('hidden')) {
+      if (e.key === 'Enter' && !el.titleScreen.classList.contains('hidden')) startGame();
+      return;
+    }
+    if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       advance();
+    } else if (/^[1-4]$/.test(e.key)) {
+      chooseByIndex(Number(e.key) - 1);
     }
   });
 })();

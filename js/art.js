@@ -39,8 +39,8 @@ const Art = (() => {
       : '';
     const rightArm = wave
       ? `<g class="anim-wave">
-           <rect x="17" y="-132" width="9" height="40" rx="4.5" fill="${shirt}" transform="rotate(30 21.5 -92)"/>
-           <circle cx="41" cy="-127" r="5" fill="${skin}"/>
+           <rect x="13" y="-130" width="9" height="42" rx="4.5" fill="${shirt}" transform="rotate(32 17.5 -90)"/>
+           <circle cx="38" cy="-123" r="5" fill="${skin}"/>
          </g>`
       : `<rect x="17" y="-96" width="9" height="40" rx="4.5" fill="${shirt}"/>
          <circle cx="21.5" cy="-56" r="5" fill="${skin}"/>`;
@@ -245,10 +245,10 @@ const Art = (() => {
         </linearGradient></defs>
         <rect width="800" height="450" fill="url(#tSky)"/>
         ${stars}
-        <circle cx="640" cy="300" r="46" fill="#ffd9a0" opacity=".9"/>
+        <circle cx="128" cy="278" r="46" fill="#ffd9a0" opacity=".9"/>
         ${buildings}
         <g class="anim-float">
-        <g transform="translate(400,250) rotate(-18)">
+        <g transform="translate(662,224) rotate(-18) scale(.92)">
           <path d="M0,-90 C26,-56 26,10 16,46 L-16,46 C-26,10 -26,-56 0,-90 Z" fill="#eef2ff"/>
           <path d="M0,-90 C10,-70 14,-40 14,-10 L-14,-10 C-14,-40 -10,-70 0,-90 Z" fill="#d6ddf5"/>
           <circle cx="0" cy="-22" r="13" fill="#4ecdc4"/>
@@ -269,8 +269,8 @@ const Art = (() => {
       return svgWrap(`
         ${room('#efe9dc', '#d4bf9f')}
         ${windowView(60, 50, 300, 170, 'day')}
-        <rect x="430" y="60" width="150" height="44" rx="8" fill="#4ecdc4"/>
-        <text x="505" y="89" font-size="24" font-weight="bold" fill="#fff" text-anchor="middle" font-family="sans-serif">NOVA WORKS</text>
+        <rect x="420" y="58" width="186" height="46" rx="8" fill="#4ecdc4"/>
+        <text x="513" y="87" font-size="19" font-weight="bold" fill="#fff" text-anchor="middle" font-family="sans-serif" letter-spacing="1">NOVA WORKS</text>
         ${plant(740, 412, 1.2)}
         ${sittingPerson({ x: 250, y: 330, s: .92, shirt: '#7f8db8', hair: '#5b4632', mood: 'happy' })}
         ${sittingPerson({ x: 480, y: 330, s: .92, shirt: '#6dbf63', hair: '#1f1a17', longHair: true, mood: 'happy' })}
@@ -299,7 +299,7 @@ const Art = (() => {
         <g transform="translate(620,365)">
           <path d="M-20,0 L20,0 L16,40 L-16,40 Z" fill="#caa56e"/>
           <path d="M-20,0 L20,0 L18,12 L-18,12 Z" fill="#b8915a"/>
-          <text x="0" y="-8" font-size="13" fill="#cfd6f2" text-anchor="middle" font-family="sans-serif">出前の箱</text>
+          <path d="M-34,18 L-6,18 L-9,40 L-31,40 Z" fill="#b8915a" opacity=".85"/>
         </g>
         ${plant(740, 430, 1)}
       `);
@@ -406,8 +406,9 @@ const Art = (() => {
           <rect x="14" y="-42" width="14" height="16" fill="#33384f"/>
         </g>
         ${person({ x: 660, y: 442, s: 1.0, shirt: '#5c5046', hair: '#1f1a17', mood: 'neutral' })}
-        <rect x="380" y="80" width="180" height="48" rx="10" fill="#fff" stroke="#ccc" stroke-width="2"/>
-        <text x="470" y="111" font-size="20" font-weight="bold" fill="#e9466e" text-anchor="middle" font-family="sans-serif">取材中 ● REC</text>
+        <rect x="390" y="82" width="160" height="44" rx="9" fill="#fff" stroke="#ccc" stroke-width="2"/>
+        <circle cx="425" cy="104" r="6" fill="#e9466e"><animate attributeName="opacity" values="1;.2;1" dur="1.4s" repeatCount="indefinite"/></circle>
+        <text x="490" y="110" font-size="16" font-weight="bold" fill="#e9466e" text-anchor="middle" font-family="sans-serif">REC 取材中</text>
         ${plant(80, 430, 1)}
       `);
     },
@@ -473,7 +474,6 @@ const Art = (() => {
         <g transform="translate(120,392)">
           <path d="M-26,0 L26,0 L22,34 L-22,34 Z" fill="#b08d5f"/>
           <path d="M-26,0 L0,-12 L26,0 Z" fill="#9c7b50"/>
-          <text x="0" y="54" font-size="12" fill="#cfd6f2" text-anchor="middle" font-family="sans-serif">段ボール</text>
         </g>
         <g transform="translate(195,400)">
           <path d="M-22,0 L22,0 L18,28 L-18,28 Z" fill="#b08d5f"/>
@@ -484,8 +484,8 @@ const Art = (() => {
         ${person({ x: 700, y: 436, s: 1.02, shirt: '#e9806e', hair: '#3a2e2a', longHair: true, mood: 'angry' })}
         <path d="M636,330 L666,330" stroke="#ffb13d" stroke-width="4" stroke-linecap="round"/>
         <text x="651" y="318" font-size="22" fill="#ffb13d" text-anchor="middle" font-weight="900">!</text>
-        <rect x="60" y="60" width="300" height="56" rx="10" fill="#2a2535"/>
-        <text x="210" y="96" font-size="20" font-weight="bold" fill="#ff8a8a" text-anchor="middle" font-family="sans-serif">退職者が止まらない…</text>
+        <rect x="60" y="88" width="280" height="52" rx="10" fill="#2a2535" opacity=".92"/>
+        <text x="200" y="121" font-size="18" font-weight="bold" fill="#ff8a8a" text-anchor="middle" font-family="sans-serif">退職者が止まらない…</text>
       `);
     },
 
