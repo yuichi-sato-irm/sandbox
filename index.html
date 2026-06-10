@@ -18,7 +18,8 @@
       <p class="game-desc">
         社員5人のスタートアップに入社したあなた。<br>
         KPI設計、MVV策定、評価制度、資金調達、そして組織崩壊……。<br>
-        数々のハードシングスを乗り越え、自分と会社を成長させよう。
+        数々のハードシングスを乗り越え、自分と会社を成長させよう。<br>
+        <span class="game-desc-sub">選択によって物語は分岐します。あなたの選択の「意味」は、最後にわかる。</span>
       </p>
       <button id="btn-start" class="btn-primary">入社する</button>
     </div>
@@ -29,8 +30,9 @@
     <header id="hud">
       <div class="hud-left">
         <div class="hud-chapter" id="hud-chapter">第1章</div>
-        <div class="hud-title" id="hud-role">役職：メンバー</div>
-        <div class="hud-members" id="hud-members">社員数：5人</div>
+        <div class="hud-day" id="hud-day">入社1日目</div>
+        <div class="hud-title" id="hud-role">役職:メンバー</div>
+        <div class="hud-members" id="hud-members">社員数:5人</div>
       </div>
       <div class="hud-stats">
         <div class="stat" data-stat="cash">
@@ -58,6 +60,7 @@
           <div class="bar"><div class="bar-fill fill-skill" id="bar-skill"></div></div>
           <span class="stat-num" id="num-skill">10</span>
         </div>
+        <button id="btn-mute" class="btn-mute" title="サウンド ON/OFF">🔊</button>
       </div>
     </header>
 
@@ -69,6 +72,7 @@
 
     <footer id="textbox">
       <div id="speaker" class="speaker"></div>
+      <div id="chat-line" class="chat-line hidden"></div>
       <div id="text" class="text"></div>
       <div id="next-hint" class="next-hint hidden">▼ クリックで次へ</div>
       <div id="choices" class="choices hidden"></div>
@@ -77,13 +81,18 @@
 
   <!-- エンディング画面 -->
   <div id="ending-screen" class="screen hidden">
-    <div id="ending-art" class="art-frame"></div>
-    <div class="ending-overlay">
-      <p class="ending-label">― ENDING ―</p>
-      <h2 id="ending-title" class="ending-title"></h2>
-      <p id="ending-text" class="ending-text"></p>
-      <div id="ending-summary" class="ending-summary"></div>
-      <button id="btn-replay" class="btn-primary">もう一度プレイする</button>
+    <div class="ending-hero">
+      <div id="ending-art" class="art-frame"></div>
+      <div class="ending-overlay">
+        <p class="ending-label">― ENDING ―</p>
+        <h2 id="ending-title" class="ending-title"></h2>
+        <p id="ending-text" class="ending-text"></p>
+      </div>
+    </div>
+    <div id="ending-summary" class="ending-summary"></div>
+    <div id="ending-notes" class="ending-notes"></div>
+    <div class="ending-actions">
+      <button id="btn-replay" class="btn-primary">もう一度プレイする ─ 別の選択を試す</button>
     </div>
   </div>
 

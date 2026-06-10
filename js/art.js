@@ -38,29 +38,37 @@ const Art = (() => {
       ? `<path d="M-9,-119 L-3,-121 M9,-119 L3,-121" stroke="#5a3b2e" stroke-width="2" stroke-linecap="round"/>`
       : '';
     const rightArm = wave
-      ? `<rect x="17" y="-132" width="9" height="40" rx="4.5" fill="${shirt}" transform="rotate(30 21.5 -92)"/>
-         <circle cx="41" cy="-127" r="5" fill="${skin}"/>`
+      ? `<g class="anim-wave">
+           <rect x="17" y="-132" width="9" height="40" rx="4.5" fill="${shirt}" transform="rotate(30 21.5 -92)"/>
+           <circle cx="41" cy="-127" r="5" fill="${skin}"/>
+         </g>`
       : `<rect x="17" y="-96" width="9" height="40" rx="4.5" fill="${shirt}"/>
          <circle cx="21.5" cy="-56" r="5" fill="${skin}"/>`;
     const sideHair = longHair
       ? `<rect x="-21" y="-122" width="9" height="30" rx="4.5" fill="${hair}"/>
          <rect x="12" y="-122" width="9" height="30" rx="4.5" fill="${hair}"/>`
       : '';
+    const bobDelay = (-Math.random() * 2.6).toFixed(2);
+    const blinkDelay = (-Math.random() * 4).toFixed(2);
     return `
     <g transform="translate(${x},${y}) scale(${s})">
       <ellipse cx="0" cy="2" rx="26" ry="6" fill="rgba(0,0,0,.18)"/>
       <rect x="-14" y="-46" width="11" height="46" rx="5" fill="${pants}"/>
       <rect x="3"   y="-46" width="11" height="46" rx="5" fill="${pants}"/>
-      <rect x="-19" y="-100" width="38" height="58" rx="14" fill="${shirt}"/>
-      <rect x="-26" y="-96" width="9" height="40" rx="4.5" fill="${shirt}"/>
-      <circle cx="-21.5" cy="-56" r="5" fill="${skin}"/>
-      ${rightArm}
-      ${sideHair}
-      <circle cx="0" cy="-114" r="17" fill="${skin}"/>
-      <path d="M-17,-114 a17,17 0 0 1 34,0 z" fill="${hair}"/>
-      <circle cx="-6" cy="-112" r="2" fill="#3b2b22"/>
-      <circle cx="6"  cy="-112" r="2" fill="#3b2b22"/>
-      ${brows}${mouth}
+      <g class="anim-bob" style="animation-delay:${bobDelay}s">
+        <rect x="-19" y="-100" width="38" height="58" rx="14" fill="${shirt}"/>
+        <rect x="-26" y="-96" width="9" height="40" rx="4.5" fill="${shirt}"/>
+        <circle cx="-21.5" cy="-56" r="5" fill="${skin}"/>
+        ${rightArm}
+        ${sideHair}
+        <circle cx="0" cy="-114" r="17" fill="${skin}"/>
+        <path d="M-17,-114 a17,17 0 0 1 34,0 z" fill="${hair}"/>
+        <g class="anim-blink" style="animation-delay:${blinkDelay}s">
+          <circle cx="-6" cy="-112" r="2" fill="#3b2b22"/>
+          <circle cx="6"  cy="-112" r="2" fill="#3b2b22"/>
+        </g>
+        ${brows}${mouth}
+      </g>
     </g>`;
   }
 
@@ -81,7 +89,8 @@ const Art = (() => {
   function laptop(x, y, lid = '#dfe6f5', glow = '#bcd6ff') {
     return `
       <rect x="${x - 17}" y="${y - 24}" width="34" height="23" rx="2.5" fill="#3c4664"/>
-      <rect x="${x - 14}" y="${y - 21}" width="28" height="17" fill="${glow}"/>
+      <rect class="anim-glow" style="animation-delay:${(-Math.random() * 3).toFixed(2)}s"
+        x="${x - 14}" y="${y - 21}" width="28" height="17" fill="${glow}"/>
       <path d="M${x - 21},${y - 1} L${x + 21},${y - 1} L${x + 25},${y + 5} L${x - 25},${y + 5} Z" fill="${lid}"/>`;
   }
 
@@ -122,8 +131,9 @@ const Art = (() => {
     if (sky === 'rain') {
       const rr = rng(99);
       for (let i = 0; i < 26; i++) {
-        rain += `<line x1="${x + 6 + rr() * (w - 12)}" y1="${y + 6 + rr() * (h - 24)}"
-          x2="${x + 2 + rr() * (w - 12)}" y2="${y + 22 + rr() * (h - 24)}"
+        rain += `<line class="anim-rain" style="animation-delay:${(-rr() * 0.7).toFixed(2)}s"
+          x1="${x + 6 + rr() * (w - 12)}" y1="${y + 6 + rr() * (h - 30)}"
+          x2="${x + 2 + rr() * (w - 12)}" y2="${y + 22 + rr() * (h - 30)}"
           stroke="#cfe2ff" stroke-width="1.6" opacity=".55"/>`;
       }
     }
@@ -163,9 +173,10 @@ const Art = (() => {
     const colors = ['#f5c542', '#4ecdc4', '#e9806e', '#9b6bf5', '#6dbf63', '#ff8fb3'];
     let out = '';
     for (let i = 0; i < n; i++) {
-      const cx = r() * 800, cy = r() * 360, rot = r() * 360;
-      out += `<rect x="${cx}" y="${cy}" width="${5 + r() * 6}" height="${3 + r() * 4}"
-        fill="${colors[(i % colors.length)]}" transform="rotate(${rot} ${cx} ${cy})" opacity=".9"/>`;
+      const cx = r() * 800, cy = r() * 420, rot = r() * 360;
+      out += `<g class="anim-fall" style="animation-duration:${(3.5 + r() * 4).toFixed(2)}s;animation-delay:${(-r() * 7).toFixed(2)}s">
+        <rect x="${cx}" y="${cy}" width="${5 + r() * 6}" height="${3 + r() * 4}"
+        fill="${colors[(i % colors.length)]}" transform="rotate(${rot} ${cx} ${cy})" opacity=".9"/></g>`;
     }
     return out;
   }
@@ -215,7 +226,8 @@ const Art = (() => {
       const r = rng(42);
       let stars = '';
       for (let i = 0; i < 40; i++) {
-        stars += `<circle cx="${r() * 800}" cy="${r() * 220}" r="${0.8 + r() * 1.6}" fill="#fff" opacity="${0.4 + r() * 0.6}"/>`;
+        stars += `<circle class="anim-twinkle" style="animation-delay:${(-r() * 3).toFixed(2)}s"
+          cx="${r() * 800}" cy="${r() * 220}" r="${0.8 + r() * 1.6}" fill="#fff" opacity="${0.4 + r() * 0.6}"/>`;
       }
       let buildings = '';
       let bx = -10;
@@ -235,6 +247,7 @@ const Art = (() => {
         ${stars}
         <circle cx="640" cy="300" r="46" fill="#ffd9a0" opacity=".9"/>
         ${buildings}
+        <g class="anim-float">
         <g transform="translate(400,250) rotate(-18)">
           <path d="M0,-90 C26,-56 26,10 16,46 L-16,46 C-26,10 -26,-56 0,-90 Z" fill="#eef2ff"/>
           <path d="M0,-90 C10,-70 14,-40 14,-10 L-14,-10 C-14,-40 -10,-70 0,-90 Z" fill="#d6ddf5"/>
@@ -242,8 +255,11 @@ const Art = (() => {
           <circle cx="0" cy="-22" r="8" fill="#bff3ef"/>
           <path d="M-16,18 C-36,28 -38,50 -38,58 L-16,46 Z" fill="#e9806e"/>
           <path d="M16,18 C36,28 38,50 38,58 L16,46 Z" fill="#e9806e"/>
-          <path d="M-10,48 C-6,72 6,72 10,48 Z" fill="#ffb13d"/>
-          <path d="M-5,50 C-2,84 2,84 5,50 Z" fill="#ff7043"/>
+          <g class="anim-flicker">
+            <path d="M-10,48 C-6,72 6,72 10,48 Z" fill="#ffb13d"/>
+            <path d="M-5,50 C-2,84 2,84 5,50 Z" fill="#ff7043"/>
+          </g>
+        </g>
         </g>
       `);
     },
@@ -279,7 +295,7 @@ const Art = (() => {
         ${desk(320, 340, 420, '#5d6585', '#4a5170')}
         ${laptop(200, 340, '#aeb9d6', '#ff8a8a')}
         ${laptop(420, 340, '#aeb9d6', '#9fd8ff')}
-        <text x="105" y="295" font-size="17" fill="#ff8a8a" text-anchor="middle" font-family="monospace" font-weight="bold">ERROR!</text>
+        <text class="anim-alert" x="105" y="295" font-size="17" fill="#ff8a8a" text-anchor="middle" font-family="monospace" font-weight="bold">ERROR!</text>
         <g transform="translate(620,365)">
           <path d="M-20,0 L20,0 L16,40 L-16,40 Z" fill="#caa56e"/>
           <path d="M-20,0 L20,0 L18,12 L-18,12 Z" fill="#b8915a"/>
@@ -470,6 +486,52 @@ const Art = (() => {
         <text x="651" y="318" font-size="22" fill="#ffb13d" text-anchor="middle" font-weight="900">!</text>
         <rect x="60" y="60" width="300" height="56" rx="10" fill="#2a2535"/>
         <text x="210" y="96" font-size="20" font-weight="bold" fill="#ff8a8a" text-anchor="middle" font-family="sans-serif">退職者が止まらない…</text>
+      `);
+    },
+
+    /** 第10章分岐:夜の屋上 */
+    rooftop() {
+      const r = rng(77);
+      let stars = '';
+      for (let i = 0; i < 34; i++) {
+        stars += `<circle class="anim-twinkle" style="animation-delay:${(-r() * 3).toFixed(2)}s"
+          cx="${r() * 800}" cy="${r() * 200}" r="${0.7 + r() * 1.5}" fill="#fff" opacity="${0.35 + r() * 0.6}"/>`;
+      }
+      let skyline = '';
+      let bx = -10;
+      while (bx < 820) {
+        const bw = 36 + r() * 64, bh = 50 + r() * 110;
+        skyline += `<rect x="${bx}" y="${290 - bh}" width="${bw}" height="${bh}" fill="#161d3a"/>`;
+        for (let i = 0; i < 6; i++) {
+          skyline += `<rect x="${bx + 4 + r() * (bw - 12)}" y="${290 - bh + 6 + r() * (bh - 18)}" width="6" height="7" fill="#ffd97a" opacity="${0.3 + r() * 0.6}"/>`;
+        }
+        bx += bw + 12;
+      }
+      let fence = '';
+      for (let fx = 20; fx < 800; fx += 34) {
+        fence += `<rect x="${fx}" y="268" width="5" height="74" fill="#3d4666"/>`;
+      }
+      return svgWrap(`
+        <defs><linearGradient id="roofSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#0c1130"/><stop offset="1" stop-color="#27306b"/>
+        </linearGradient></defs>
+        <rect width="800" height="450" fill="url(#roofSky)"/>
+        ${stars}
+        <circle cx="660" cy="86" r="30" fill="#fff7d6"/>
+        <circle cx="648" cy="78" r="26" fill="#0c1130" opacity=".92"/>
+        ${skyline}
+        <rect x="0" y="290" width="800" height="160" fill="#2a3152"/>
+        <rect x="0" y="284" width="800" height="10" fill="#39415f"/>
+        ${fence}
+        <rect x="16" y="268" width="772" height="6" rx="3" fill="#4a5378"/>
+        <rect x="16" y="304" width="772" height="5" rx="2.5" fill="#444d72"/>
+        <g transform="translate(700,400)">
+          <rect x="-26" y="-92" width="52" height="92" rx="6" fill="#1d2440"/>
+          <rect class="anim-glow" x="-19" y="-84" width="38" height="56" rx="4" fill="#7fe3ff" opacity=".85"/>
+          <rect x="-19" y="-22" width="38" height="12" rx="3" fill="#39415f"/>
+        </g>
+        ${person({ x: 300, y: 432, s: 1.04, shirt: '#4a7fd9', hair: '#2e3445', mood: 'neutral' })}
+        ${person({ x: 420, y: 432, s: 1.04, shirt: '#37415c', hair: '#1f1a17', mood: 'sad' })}
       `);
     },
 
